@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, AppState, type AppStateStatus, Pressable, StyleSheet, Text, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { Ionicons } from '@expo/vector-icons';
 import * as Notifications from 'expo-notifications';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -119,18 +120,36 @@ function AppShell() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading, settings?.biometricLockEnabled]);
 
-  if (loading) return <LoadingScreen error={null} />;
+  // Gate on settings being null (never fetched yet), not on `loading`:
+  // `loading` is a shared flag on the useSettings() store now (fixing the
+  // Settings screen's theme-not-applying bug made every useSettings()
+  // consumer app-wide share one loading flag). Every screen that mounts
+  // after unlock (Tabs, Home, ...) calls useAppColors() -> useSettings()
+  // itself and flips that shared `loading` true again for its own
+  // refetch — gating here on `loading` tore the whole <Stack> down to
+  // this loading screen every time any descendant mounted, which
+  // remounted those same descendants, which flipped `loading` again: an
+  // infinite mount/unmount loop that looked like the app freezing right
+  // after biometric unlock. `settings` itself stays non-null across every
+  // background refetch once it's first loaded, so it only gates the true
+  // initial load.
+  if (loading && !settings) return <LoadingScreen error={null} />;
 
   if (settings?.biometricLockEnabled && !authed) {
     return (
       <View style={[styles.center, { backgroundColor: colors.background }]}>
+        <View style={[styles.lockIconCircle, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <Ionicons name="finger-print" size={40} color={colors.primary} />
+        </View>
         <Text style={[styles.lockTitle, { color: colors.text }]}>Spendtr is locked</Text>
         <Pressable
           accessibilityRole="button"
+          accessibilityLabel="Use biometric"
           onPress={() => authenticate().then(setAuthed)}
           style={[styles.unlockButton, { backgroundColor: colors.primary }]}
         >
-          <Text style={styles.unlockButtonText}>Unlock</Text>
+          <Ionicons name="finger-print" size={20} color="#fff" />
+          <Text style={styles.unlockButtonText}>Use biometric</Text>
         </Pressable>
       </View>
     );
@@ -150,7 +169,24 @@ function AppShell() {
 
 const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
+  lockIconCircle: {
+    width: 84,
+    height: 84,
+    borderRadius: 42,
+    borderWidth: StyleSheet.hairlineWidth,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 20,
+  },
   lockTitle: { fontSize: 20, fontWeight: '700', marginBottom: 24 },
-  unlockButton: { paddingHorizontal: 24, paddingVertical: 14, borderRadius: 12, minHeight: 44 },
+  unlockButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+    borderRadius: 12,
+    minHeight: 44,
+  },
   unlockButtonText: { color: '#fff', fontWeight: '700', fontSize: 16 },
 });

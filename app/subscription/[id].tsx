@@ -11,7 +11,7 @@ import { useCurrencies } from '@/hooks/useCurrencies';
 import { useSubscriptions } from '@/hooks/useSubscriptions';
 import * as subscriptionRepository from '@/repositories/subscriptionRepository';
 import * as transactionRepository from '@/repositories/transactionRepository';
-import { minorToMajor } from '@/utils/money';
+import { formatGroupedAmountMinor } from '@/utils/money';
 
 export default function SubscriptionDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -79,8 +79,13 @@ export default function SubscriptionDetailScreen() {
       <View style={styles.content}>
         <Text style={[styles.title, { color: colors.text }]}>{subscription.name}</Text>
         <Text style={[styles.amount, { color: colors.text }]}>
-          {subscription.currencyCode} {minorToMajor(subscription.amountMinor, decimalDigits).toFixed(decimalDigits)} /{' '}
-          {subscription.billingCycle}
+          {subscription.currencyCode}{' '}
+          {formatGroupedAmountMinor(subscription.amountMinor, {
+            symbol: '',
+            decimalDigits,
+            currencyCode: subscription.currencyCode,
+          })}{' '}
+          / {subscription.billingCycle}
         </Text>
         <Text style={[styles.renewal, { color: colors.textMuted }]}>
           Next renewal: {subscription.nextRenewalDate.slice(0, 10)}

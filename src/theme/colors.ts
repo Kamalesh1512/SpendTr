@@ -18,7 +18,7 @@ export const darkPalette: Palette = {
   border: '#2A313C',
   text: '#F2F4F7',
   textMuted: '#9AA4B2',
-  primary: '#5B8CFF',
+  primary: '#F97316',
   danger: '#FF6B6B',
   success: '#3DD68C',
 };
@@ -29,7 +29,7 @@ export const lightPalette: Palette = {
   border: '#E3E6EA',
   text: '#111417',
   textMuted: '#5C6672',
-  primary: '#3661D6',
+  primary: '#C2410C',
   danger: '#D9384A',
   success: '#1E9E63',
 };

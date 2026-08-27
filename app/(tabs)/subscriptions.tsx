@@ -8,7 +8,7 @@ import { useCurrencies } from '@/hooks/useCurrencies';
 import { useSubscriptions } from '@/hooks/useSubscriptions';
 import { EmptyState } from '@/components/EmptyState';
 import type { Subscription } from '@/repositories/subscriptionRepository';
-import { minorToMajor } from '@/utils/money';
+import { formatGroupedAmountMinor } from '@/utils/money';
 
 export default function SubscriptionsScreen() {
   const colors = useAppColors();
@@ -73,7 +73,11 @@ function SubscriptionRow({
   onPress: () => void;
 }) {
   const colors = useAppColors();
-  const amount = minorToMajor(subscription.amountMinor, decimalDigits).toFixed(decimalDigits);
+  const amount = formatGroupedAmountMinor(subscription.amountMinor, {
+    symbol: '',
+    decimalDigits,
+    currencyCode: subscription.currencyCode,
+  });
 
   return (
     <Pressable onPress={onPress} style={[styles.row, { borderColor: colors.border }]}>

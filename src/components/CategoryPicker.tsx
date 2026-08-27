@@ -2,8 +2,16 @@
 // picker"). Search/filter is intentionally omitted for MVP — only appears
 // once category count exceeds a screenful, which the default seed set
 // doesn't reach.
+//
+// Renders as a plain flex-wrap grid rather than a FlatList: both call
+// sites (Add Transaction, Add Subscription) already scroll the whole
+// screen in an outer ScrollView, and nesting a VirtualizedList inside a
+// ScrollView with the same (vertical) orientation breaks windowing and
+// throws RN's "VirtualizedLists should never be nested" warning. The
+// category count is always small (a screenful), so a FlatList's
+// virtualization bought nothing here anyway.
 import { Ionicons } from '@expo/vector-icons';
-import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useAppColors } from '../hooks/useAppColors';
 import { useRecentCategoriesStore } from '../stores/useRecentCategoriesStore';
 import type { Category } from '../repositories/categoryRepository';
@@ -28,14 +36,12 @@ export function CategoryPicker({ categories, selectedId, onSelect }: CategoryPic
   });
 
   return (
-    <FlatList
-      data={ordered}
-      keyExtractor={(item) => item.id}
-      numColumns={4}
-      renderItem={({ item }) => {
+    <View style={styles.grid}>
+      {ordered.map((item) => {
         const selected = item.id === selectedId;
         return (
           <Pressable
+            key={item.id}
             accessibilityRole="button"
             accessibilityLabel={item.name}
             onPress={() => onSelect(item)}
@@ -54,13 +60,14 @@ export function CategoryPicker({ categories, selectedId, onSelect }: CategoryPic
             </Text>
           </Pressable>
         );
-      }}
-    />
+      })}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  cell: { flex: 1 / 4, alignItems: 'center', paddingVertical: 10 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap' },
+  cell: { width: '25%', alignItems: 'center', paddingVertical: 10 },
   iconCircle: {
     width: 48,
     height: 48,

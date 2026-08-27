@@ -42,7 +42,8 @@
         {
           "color": "#4F8DF7"
         }
-      ]
+      ],
+      "@react-native-community/datetimepicker"
     ],
     "experiments": {
       "typedRoutes": true
@@ -53,6 +54,12 @@
         "projectId": "d1a6e0a4-0985-4e64-8467-89424ad9c3c5"
       }
     },
-    "owner": "bhworkspace"
+    "owner": "bhworkspace",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/d1a6e0a4-0985-4e64-8467-89424ad9c3c5"
+    }
   }
 }

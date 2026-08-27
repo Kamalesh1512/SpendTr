@@ -54,6 +54,38 @@ export default function OnboardingScreen() {
     }
   }
 
+  // Step 1 renders CurrencyPicker's own FlatList as the screen's only
+  // scrollable element (flex:1, no ScrollView ancestor): nesting that
+  // FlatList inside the same outer ScrollView used by steps 0/2 broke
+  // windowing and threw RN's "VirtualizedLists should never be nested"
+  // warning. Steps 0 and 2 have no list of their own, so they keep the
+  // plain ScrollView (useful on short screens where their content might
+  // not fit).
+  if (store.step === 1) {
+    return (
+      <View style={[styles.stepOneContainer, { backgroundColor: colors.background }]}>
+        <Text style={[styles.heading, { color: colors.text }]}>Choose your base currency</Text>
+        <Text style={[styles.subtitle, { color: colors.textMuted }]}>
+          Reports and totals will convert into this currency. You can change it later in Settings.
+        </Text>
+        <View style={{ flex: 1 }}>
+          <CurrencyPicker
+            currencies={currencies}
+            selectedCode={selectedCode}
+            onSelect={(c) => store.setBaseCurrencyCode(c.code)}
+          />
+        </View>
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => store.setStep(2)}
+          style={[styles.primaryButton, { backgroundColor: colors.primary }]}
+        >
+          <Text style={styles.primaryButtonText}>Continue</Text>
+        </Pressable>
+      </View>
+    );
+  }
+
   return (
     <ScrollView style={{ backgroundColor: colors.background }} contentContainerStyle={styles.content}>
       {store.step === 0 && (
@@ -68,29 +100,6 @@ export default function OnboardingScreen() {
             style={[styles.primaryButton, { backgroundColor: colors.primary }]}
           >
             <Text style={styles.primaryButtonText}>Get Started</Text>
-          </Pressable>
-        </View>
-      )}
-
-      {store.step === 1 && (
-        <View style={{ flex: 1 }}>
-          <Text style={[styles.heading, { color: colors.text }]}>Choose your base currency</Text>
-          <Text style={[styles.subtitle, { color: colors.textMuted }]}>
-            Reports and totals will convert into this currency. You can change it later in Settings.
-          </Text>
-          <View style={{ height: 320 }}>
-            <CurrencyPicker
-              currencies={currencies}
-              selectedCode={selectedCode}
-              onSelect={(c) => store.setBaseCurrencyCode(c.code)}
-            />
-          </View>
-          <Pressable
-            accessibilityRole="button"
-            onPress={() => store.setStep(2)}
-            style={[styles.primaryButton, { backgroundColor: colors.primary }]}
-          >
-            <Text style={styles.primaryButtonText}>Continue</Text>
           </Pressable>
         </View>
       )}
@@ -125,6 +134,7 @@ export default function OnboardingScreen() {
 
 const styles = StyleSheet.create({
   content: { flexGrow: 1, padding: 24, justifyContent: 'center' },
+  stepOneContainer: { flex: 1, padding: 24, paddingTop: 60 },
   title: { fontSize: 36, fontWeight: '800', textAlign: 'center', marginBottom: 16 },
   heading: { fontSize: 22, fontWeight: '700', marginBottom: 8 },
   subtitle: { fontSize: 15, textAlign: 'center', marginBottom: 24 },

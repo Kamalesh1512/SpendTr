@@ -9,7 +9,7 @@ import { useCurrencies } from '@/hooks/useCurrencies';
 import { useTransactions } from '@/hooks/useTransactions';
 import { EmptyState } from '@/components/EmptyState';
 import type { Transaction } from '@/repositories/transactionRepository';
-import { minorToMajor } from '@/utils/money';
+import { formatGroupedAmountMinor } from '@/utils/money';
 
 export default function HomeScreen() {
   const colors = useAppColors();
@@ -68,7 +68,11 @@ function TransactionRow({
   const colors = useAppColors();
   const isExpense = transaction.type === 'expense';
   const sign = isExpense ? '-' : '+';
-  const amount = minorToMajor(transaction.amountMinor, decimalDigits).toFixed(decimalDigits);
+  const amount = formatGroupedAmountMinor(transaction.amountMinor, {
+    symbol: '',
+    decimalDigits,
+    currencyCode: transaction.currencyCode,
+  });
   const showBase =
     transaction.baseAmountMinor != null &&
     transaction.baseCurrencyCode &&
@@ -91,7 +95,12 @@ function TransactionRow({
         </Text>
         {showBase ? (
           <Text style={[styles.baseAmount, { color: colors.textMuted }]}>
-            ≈ {transaction.baseCurrencyCode} {minorToMajor(transaction.baseAmountMinor ?? 0, baseDecimalDigits).toFixed(baseDecimalDigits)}
+            ≈ {transaction.baseCurrencyCode}{' '}
+            {formatGroupedAmountMinor(transaction.baseAmountMinor ?? 0, {
+              symbol: '',
+              decimalDigits: baseDecimalDigits,
+              currencyCode: transaction.baseCurrencyCode ?? 'USD',
+            })}
           </Text>
         ) : null}
       </View>

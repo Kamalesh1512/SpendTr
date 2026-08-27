@@ -24,6 +24,12 @@ const SETTINGS_ROW_ID = 1;
 async function createDefaultSettings(defaultBaseCurrencyCode: string): Promise<UserSettings> {
   const db = getDb();
   const now = new Date().toISOString();
+  // onConflictDoNothing + re-select, not a plain insert: get() is called
+  // from every useSettings() mount across the app, so on first launch
+  // (empty user_settings table) multiple callers can each see "no row"
+  // and race to insert id=1 — a plain insert makes the loser crash with a
+  // UNIQUE constraint violation instead of just reading what the winner
+  // wrote.
   const [row] = await db
     .insert(userSettings)
     .values({
@@ -37,9 +43,13 @@ async function createDefaultSettings(defaultBaseCurrencyCode: string): Promise<U
       createdAt: now,
       updatedAt: now,
     })
+    .onConflictDoNothing()
     .returning();
-  if (!row) throw new ValidationError('Failed to create default user_settings row');
-  return row;
+  if (row) return row;
+
+  const [existing] = await db.select().from(userSettings).where(eq(userSettings.id, SETTINGS_ROW_ID)).limit(1);
+  if (!existing) throw new ValidationError('Failed to create default user_settings row');
+  return existing;
 }
 
 export async function get(defaultBaseCurrencyCode = 'USD'): Promise<UserSettings> {

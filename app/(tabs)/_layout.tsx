@@ -1,13 +1,17 @@
 // Persistent FAB across the main tabs, opening Add Transaction directly
 // (docs/UI_UX_GUIDELINES.md "Quick-Add FAB").
 import { Ionicons } from '@expo/vector-icons';
-import { Tabs, useRouter } from 'expo-router';
+import { Tabs, useRouter, useSegments } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useAppColors } from '@/hooks/useAppColors';
 
 export default function TabsLayout() {
   const colors = useAppColors();
   const router = useRouter();
+  const segments = useSegments();
+  // Subscriptions already has its own "+" (Add Subscription) in its header,
+  // so the global Add Transaction FAB is redundant — and confusing — there.
+  const hideFab = segments[segments.length - 1] === 'subscriptions';
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
@@ -46,14 +50,16 @@ export default function TabsLayout() {
         />
       </Tabs>
 
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="Add transaction"
-        onPress={() => router.push('/add-transaction')}
-        style={[styles.fab, { backgroundColor: colors.primary }]}
-      >
-        <Ionicons name="add" size={28} color="#fff" />
-      </Pressable>
+      {hideFab ? null : (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Add transaction"
+          onPress={() => router.push('/add-transaction')}
+          style={[styles.fab, { backgroundColor: colors.primary }]}
+        >
+          <Ionicons name="add" size={28} color="#fff" />
+        </Pressable>
+      )}
     </View>
   );
 }

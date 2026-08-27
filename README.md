@@ -1,7 +1,5 @@
 # Spendtr — Privacy-First Offline Expense & Subscription Tracker
 
-> Working title, not final — confirm name/trademark/App Store availability before launch.
-
 ## Product Overview
 
 Spendtr is a cross-platform (iOS + Android) mobile app for manually tracking personal expenses and recurring subscriptions, with real multi-currency support, that never requires linking a bank account and stores all data on-device by default. Built for privacy-conscious users, expats/immigrants, and subscription-fatigued professionals who have specifically rejected bank-linked finance apps like Rocket Money, YNAB, Copilot, and Monarch.

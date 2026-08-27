@@ -13,7 +13,7 @@ import { useCurrencies } from '@/hooks/useCurrencies';
 import { useMonthlySummary } from '@/hooks/useTransactions';
 import { useSettings } from '@/hooks/useSettings';
 import { PaywallModal } from '@/components/PaywallModal';
-import { minorToMajor } from '@/utils/money';
+import { formatGroupedAmountMinor } from '@/utils/money';
 
 function currentMonth(): string {
   return new Date().toISOString().slice(0, 7);
@@ -33,8 +33,8 @@ export default function ReportsScreen() {
   const { categories } = useCategories('expense');
   const { currencies } = useCurrencies();
   const { summary, loading, refetch } = useMonthlySummary(month);
-  const baseDecimalDigits =
-    currencies.find((c) => c.code === settings?.baseCurrencyCode)?.decimalDigits ?? 2;
+  const baseCurrencyCode = settings?.baseCurrencyCode ?? 'USD';
+  const baseDecimalDigits = currencies.find((c) => c.code === baseCurrencyCode)?.decimalDigits ?? 2;
 
   useFocusEffect(
     useCallback(() => {
@@ -91,13 +91,21 @@ export default function ReportsScreen() {
             <View>
               <Text style={[styles.totalLabel, { color: colors.textMuted }]}>Expenses</Text>
               <Text style={[styles.totalValue, { color: colors.text }]}>
-                {minorToMajor(summary.totalExpenseBaseMinor, baseDecimalDigits).toFixed(baseDecimalDigits)}
+                {formatGroupedAmountMinor(summary.totalExpenseBaseMinor, {
+                  symbol: '',
+                  decimalDigits: baseDecimalDigits,
+                  currencyCode: baseCurrencyCode,
+                })}
               </Text>
             </View>
             <View>
               <Text style={[styles.totalLabel, { color: colors.textMuted }]}>Income</Text>
               <Text style={[styles.totalValue, { color: colors.success }]}>
-                {minorToMajor(summary.totalIncomeBaseMinor, baseDecimalDigits).toFixed(baseDecimalDigits)}
+                {formatGroupedAmountMinor(summary.totalIncomeBaseMinor, {
+                  symbol: '',
+                  decimalDigits: baseDecimalDigits,
+                  currencyCode: baseCurrencyCode,
+                })}
               </Text>
             </View>
           </View>
@@ -127,7 +135,11 @@ export default function ReportsScreen() {
                       />
                     </View>
                     <Text style={[styles.barValue, { color: colors.textMuted }]}>
-                      {minorToMajor(c.totalBaseMinor, baseDecimalDigits).toFixed(baseDecimalDigits)}
+                      {formatGroupedAmountMinor(c.totalBaseMinor, {
+                        symbol: '',
+                        decimalDigits: baseDecimalDigits,
+                        currencyCode: baseCurrencyCode,
+                      })}
                     </Text>
                   </View>
                 );
