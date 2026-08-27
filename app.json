@@ -1,0 +1,58 @@
+{
+  "expo": {
+    "name": "SpendTr",
+    "slug": "spendtr",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "spendtr",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.spendtr.app",
+      "infoPlist": {
+        "NSFaceIDUsageDescription": "SpendTr uses Face ID to unlock your local expense data on this device. Your data never leaves your phone.",
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "com.spendtr.app",
+      "edgeToEdgeEnabled": true,
+      "permissions": [
+        "android.permission.USE_BIOMETRIC",
+        "android.permission.USE_FINGERPRINT",
+        "android.permission.SCHEDULE_EXACT_ALARM",
+        "android.permission.POST_NOTIFICATIONS"
+      ]
+    },
+    "plugins": [
+      "expo-router",
+      "expo-status-bar",
+      "expo-sqlite",
+      "expo-localization",
+      "expo-sharing",
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "SpendTr uses Face ID to unlock your local expense data on this device."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#4F8DF7"
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "d1a6e0a4-0985-4e64-8467-89424ad9c3c5"
+      }
+    },
+    "owner": "bhworkspace"
+  }
+}

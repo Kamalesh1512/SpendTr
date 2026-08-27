@@ -1,0 +1,25 @@
+node_modules/
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+##
+docs/
+# Native build output (managed workflow — regenerate with prebuild if ever needed)
+/ios
+/android
+
+# Environment (see docs/ENVIRONMENT_VARIABLES.md — .env.example IS committed)
+.env
+.env.local
+.env.*.local
+
+# Tooling
+*.log
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+coverage/
+.DS_Store
+*.tsbuildinfo
