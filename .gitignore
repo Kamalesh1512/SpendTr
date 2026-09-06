@@ -5,6 +5,12 @@ web-build/
 expo-env.d.ts
 .claude/
 
+# website/ (separate Next.js app — see website/.gitignore for its specifics)
+.next/
+website/out/
+website/next-env.d.ts
+website/.vercel
+
 ##
 docs/
 # Native build output (managed workflow — regenerate with prebuild if ever needed)

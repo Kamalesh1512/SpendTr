@@ -1,24 +1,36 @@
 // docs/USER_FLOWS.md Flow 7, 8; docs/UI_UX_GUIDELINES.md Design Principle
 // #2 — deliberately no "connect your bank" option anywhere in this screen.
-import { useState } from 'react';
-import { useFocusEffect, useRouter } from 'expo-router';
+import { useEffect, useState } from 'react';
+import { useFocusEffect, useRouter, type Href } from 'expo-router';
 import { useCallback } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import Constants from 'expo-constants';
+import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useAppColors } from '@/hooks/useAppColors';
+import { useTheme } from '@/theme/ThemeProvider';
+import { ACCENT_PRESETS, ACCENT_PRESET_LABELS, type AccentPresetId } from '@/theme/accent';
+import { useCurrencies } from '@/hooks/useCurrencies';
 import { useSettings } from '@/hooks/useSettings';
+import { CurrencyPickerSheet } from '@/components/CurrencyPickerSheet';
+import { Chip, Group, Icon, PrivacyLine, ScreenHeader, SectionLabel, SettingsRow, Toggle } from '@/components/ds';
 import * as settingsRepository from '@/repositories/settingsRepository';
 import * as biometrics from '@/services/biometrics';
 import * as notifications from '@/services/notifications';
 import * as purchases from '@/services/purchases';
 import { exportTransactionsCsv, exportTransactionsPdf } from '@/services/export';
+import * as currencyService from '@/services/currency';
+import { getDb } from '@/db/client';
 import { PaywallRequiredError } from '@/types/errors';
 
+const ACCENT_IDS = Object.keys(ACCENT_PRESETS) as AccentPresetId[];
+
 export default function SettingsScreen() {
-  const colors = useAppColors();
+  const { colors, space, font, radius } = useTheme();
   const router = useRouter();
   const { settings, refetch } = useSettings();
+  const { currencies } = useCurrencies();
   const [busy, setBusy] = useState(false);
+  const [showCurrencyPicker, setShowCurrencyPicker] = useState(false);
+  const [ratesFetchedAt, setRatesFetchedAt] = useState<string | null>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -26,10 +38,26 @@ export default function SettingsScreen() {
     }, [refetch]),
   );
 
+  useEffect(() => {
+    if (!settings?.baseCurrencyCode) return;
+    currencyService.getLatestFetchTime(getDb(), settings.baseCurrencyCode).then(setRatesFetchedAt);
+  }, [settings?.baseCurrencyCode]);
+
   if (!settings) return null;
+
+  const baseCurrency = currencies.find((c) => c.code === settings.baseCurrencyCode);
+  const ratesLabel = ratesFetchedAt
+    ? new Date(ratesFetchedAt).toLocaleString(undefined, { hour: 'numeric', minute: '2-digit', month: 'short', day: 'numeric' })
+    : 'Not fetched yet';
+  const appVersion = Constants.expoConfig?.version ?? '1.0.0';
 
   async function toggleTheme(theme: 'system' | 'light' | 'dark') {
     await settingsRepository.update({ theme });
+    refetch();
+  }
+
+  async function setAccent(accentColor: string) {
+    await settingsRepository.update({ accentColor });
     refetch();
   }
 
@@ -43,6 +71,11 @@ export default function SettingsScreen() {
       setBusy(false);
       refetch();
     }
+  }
+
+  async function toggleHideAmounts(enabled: boolean) {
+    await settingsRepository.update({ hideAmountsInSwitcher: enabled });
+    refetch();
   }
 
   async function toggleNotifications(enabled: boolean) {
@@ -91,100 +124,192 @@ export default function SettingsScreen() {
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
-      <ScrollView contentContainerStyle={styles.content}>
-        <Text style={[styles.header, { color: colors.text }]}>Settings</Text>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={['top']}>
+      <ScrollView contentContainerStyle={{ paddingBottom: space[60] }}>
+        <ScreenHeader title="Settings" />
 
-        <Section title="Security" colorText={colors.text}>
-          <Row label="Require Face ID / Fingerprint" color={colors.text}>
-            <Switch value={settings.biometricLockEnabled} onValueChange={toggleBiometric} disabled={busy} />
-          </Row>
+        <Section title="Appearance">
+          <Group>
+            <View style={{ paddingHorizontal: space[16], paddingVertical: space[14], borderBottomWidth: 1, borderBottomColor: colors.border }}>
+              <View style={{ flexDirection: 'row', gap: space[8], marginBottom: space[8] }}>
+                {(['system', 'light', 'dark'] as const).map((t) => (
+                  <Chip key={t} label={t} selected={settings.theme === t} onPress={() => toggleTheme(t)} />
+                ))}
+              </View>
+              <Text style={{ fontSize: font.size.xs, color: colors.textMuted }}>Dark is the default. Light is fully supported.</Text>
+            </View>
+
+            <View style={{ paddingHorizontal: space[16], paddingVertical: space[14] }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: space[10] }}>
+                <Text style={{ fontSize: font.size.body, color: colors.text }}>Accent colour</Text>
+                <Text style={{ fontSize: font.size.xs, color: colors.textMuted }}>{ACCENT_PRESET_LABELS[settings.accentColor as AccentPresetId] ?? ''}</Text>
+              </View>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space[8] }}>
+                {ACCENT_IDS.map((id) => {
+                  const selected = settings.accentColor === id;
+                  return (
+                    <Pressable
+                      key={id}
+                      accessibilityRole="button"
+                      accessibilityLabel={ACCENT_PRESET_LABELS[id]}
+                      onPress={() => setAccent(id)}
+                      style={{
+                        width: 32,
+                        height: 32,
+                        borderRadius: radius.full,
+                        backgroundColor: ACCENT_PRESETS[id],
+                        borderWidth: 2,
+                        borderColor: selected ? colors.text : 'transparent',
+                      }}
+                    />
+                  );
+                })}
+              </View>
+              <Text style={{ fontSize: font.size.xs, color: colors.textMuted, marginTop: space[10] }}>
+                Recolours buttons, tabs and selection only. Category colours and the SpendTr mark never change.
+              </Text>
+            </View>
+          </Group>
         </Section>
 
-        <Section title="Notifications" colorText={colors.text}>
-          <Row label="Subscription renewal reminders" color={colors.text}>
-            <Switch value={settings.notificationsEnabled} onValueChange={toggleNotifications} disabled={busy} />
-          </Row>
+        <Section title="Security">
+          <Group>
+            <SettingsRow
+              icon={<Icon name="finger-print" size={18} color={colors.textMuted} />}
+              label="Require Face ID / Fingerprint"
+              hint="Asks again after five idle minutes."
+            >
+              <Toggle checked={settings.biometricLockEnabled} onChange={toggleBiometric} disabled={busy} label="Require Face ID / Fingerprint" />
+            </SettingsRow>
+            <SettingsRow icon={<Icon name="eye-off-outline" size={18} color={colors.textMuted} />} label="Hide amounts in the app switcher" last>
+              <Toggle checked={settings.hideAmountsInSwitcher} onChange={toggleHideAmounts} label="Hide amounts in the app switcher" />
+            </SettingsRow>
+          </Group>
         </Section>
 
-        <Section title="Appearance" colorText={colors.text}>
-          <View style={styles.themeRow}>
-            {(['system', 'light', 'dark'] as const).map((t) => (
-              <Pressable
-                key={t}
-                onPress={() => toggleTheme(t)}
-                style={[
-                  styles.themeChip,
-                  {
-                    borderColor: colors.border,
-                    backgroundColor: settings.theme === t ? colors.primary : 'transparent',
-                  },
-                ]}
-              >
-                <Text style={{ color: settings.theme === t ? '#fff' : colors.text }}>{t}</Text>
-              </Pressable>
-            ))}
-          </View>
+        <Section title="Reminders">
+          <Group>
+            <SettingsRow
+              icon={<Icon name="notifications-outline" size={18} color={colors.textMuted} />}
+              label="Renewal reminders"
+              hint="Scheduled locally. No push server exists."
+              last
+            >
+              <Toggle checked={settings.notificationsEnabled} onChange={toggleNotifications} disabled={busy} label="Renewal reminders" />
+            </SettingsRow>
+          </Group>
         </Section>
 
-        <Section title="Your Data" colorText={colors.text}>
-          <Pressable onPress={() => handleExport('csv')} disabled={busy} style={styles.linkRow}>
-            <Text style={[styles.link, { color: colors.primary }]}>Export as CSV</Text>
-          </Pressable>
-          <Pressable onPress={() => handleExport('pdf')} disabled={busy} style={styles.linkRow}>
-            <Text style={[styles.link, { color: colors.primary }]}>Export as PDF</Text>
-          </Pressable>
-          <Text style={[styles.hint, { color: colors.textMuted }]}>
+        <Section title="Money">
+          <Group>
+            <SettingsRow
+              icon={<Icon name="swap-horizontal" size={18} color={colors.textMuted} />}
+              label="Base currency"
+              onPress={() => setShowCurrencyPicker(true)}
+            >
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: space[6] }}>
+                <Text style={{ color: colors.textMuted, fontSize: font.size.body }}>{baseCurrency?.code ?? settings.baseCurrencyCode}</Text>
+                <Icon name="chevron-forward" size={15} color={colors.textMuted} />
+              </View>
+            </SettingsRow>
+            <SettingsRow
+              icon={<Icon name="refresh" size={18} color={colors.textMuted} />}
+              label="Exchange rates"
+              hint="Fetched once a day. Cached offline."
+            >
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: space[6] }}>
+                <Text style={{ color: colors.textMuted, fontSize: font.size.xs }}>{ratesLabel}</Text>
+              </View>
+            </SettingsRow>
+            <SettingsRow icon={<Icon name="pricetag-outline" size={18} color={colors.textMuted} />} label="Manage categories" onPress={() => router.push('/categories')} last>
+              <Icon name="chevron-forward" size={16} color={colors.textMuted} />
+            </SettingsRow>
+          </Group>
+        </Section>
+
+        <Section title="Your data">
+          <Group>
+            <SettingsRow icon={<Icon name="cloud-upload-outline" size={18} color={colors.textMuted} />} label="Back up" hint="Encrypted with a passphrase you choose." onPress={() => router.push('/backup' as Href)}>
+              <Icon name="chevron-forward" size={15} color={colors.textMuted} />
+            </SettingsRow>
+            <SettingsRow icon={<Icon name="cloud-download-outline" size={18} color={colors.textMuted} />} label="Restore from a backup" onPress={() => router.push('/restore' as Href)}>
+              <Icon name="chevron-forward" size={15} color={colors.textMuted} />
+            </SettingsRow>
+            <SettingsRow icon={<Icon name="document-text-outline" size={18} color={colors.textMuted} />} label="Export as CSV" onPress={() => handleExport('csv')}>
+              <Icon name="chevron-forward" size={15} color={colors.textMuted} />
+            </SettingsRow>
+            <SettingsRow icon={<Icon name="document-outline" size={18} color={colors.textMuted} />} label="Export as PDF" onPress={() => handleExport('pdf')}>
+              <Icon name="chevron-forward" size={15} color={colors.textMuted} />
+            </SettingsRow>
+            <SettingsRow icon={<Icon name="folder-open-outline" size={18} color={colors.textMuted} />} label="Import a CSV" onPress={() => router.push('/import-csv' as Href)} last>
+              <Icon name="chevron-forward" size={15} color={colors.textMuted} />
+            </SettingsRow>
+          </Group>
+          <Text style={{ fontSize: font.size.xs, color: colors.textMuted, marginTop: space[8] }}>
             All your data lives only on this device. Deleting the app deletes it — export first if you switch phones.
           </Text>
         </Section>
 
-        <Section title="Pro" colorText={colors.text}>
-          {settings.isPro ? (
-            <Text style={{ color: colors.success }}>Pro unlocked ✓</Text>
-          ) : (
-            <Pressable onPress={() => router.push('/paywall')} style={styles.linkRow}>
-              <Text style={[styles.link, { color: colors.primary }]}>Unlock Pro</Text>
-            </Pressable>
-          )}
-          <Pressable onPress={handleRestore} disabled={busy} style={styles.linkRow}>
-            <Text style={[styles.link, { color: colors.primary }]}>Restore Purchases</Text>
-          </Pressable>
+        <Section title="SpendTr Pro">
+          <Group>
+            {settings.isPro ? (
+              <SettingsRow icon={<Icon name="checkmark-circle" size={18} color={colors.success} />} label="Pro is unlocked" hint="One-time purchase · thank you" />
+            ) : (
+              <SettingsRow icon={<Icon name="pricetag" size={18} color={colors.textMuted} />} label="Unlock Pro" hint="One payment, no subscription." onPress={() => router.push('/paywall')}>
+                <Icon name="chevron-forward" size={16} color={colors.textMuted} />
+              </SettingsRow>
+            )}
+            <SettingsRow icon={<Icon name="refresh" size={18} color={colors.textMuted} />} label="Restore purchases" onPress={handleRestore}>
+              <Icon name="chevron-forward" size={16} color={colors.textMuted} />
+            </SettingsRow>
+            <SettingsRow
+              icon={<Icon name="mail-outline" size={18} color={colors.textMuted} />}
+              label="Use Pro on another device"
+              hint="A one-time link. Still not an account."
+              onPress={() => router.push('/link-pro' as Href)}
+              last
+            >
+              <Icon name="chevron-forward" size={16} color={colors.textMuted} />
+            </SettingsRow>
+          </Group>
         </Section>
+
+        <Section title="About">
+          <Group>
+            <SettingsRow label="Version" last>
+              <Text style={{ fontSize: font.size.bodySm, color: colors.textMuted, fontVariant: ['tabular-nums'] }}>{appVersion}</Text>
+            </SettingsRow>
+          </Group>
+        </Section>
+
+        <View style={{ paddingHorizontal: space[20], marginTop: space[8] }}>
+          <PrivacyLine>SpendTr has no server, no account and no bank connection. Everything you see lives in a database on this phone.</PrivacyLine>
+        </View>
       </ScrollView>
+
+      <CurrencyPickerSheet
+        visible={showCurrencyPicker}
+        currencies={currencies}
+        selectedCode={settings.baseCurrencyCode}
+        onSelect={async (c) => {
+          await settingsRepository.update({ baseCurrencyCode: c.code });
+          setShowCurrencyPicker(false);
+          refetch();
+        }}
+        onClose={() => setShowCurrencyPicker(false)}
+      />
     </SafeAreaView>
   );
 }
 
-function Section({ title, colorText, children }: { title: string; colorText: string; children: React.ReactNode }) {
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  const { colors, space, font } = useTheme();
   return (
-    <View style={styles.section}>
-      <Text style={[styles.sectionTitle, { color: colorText }]}>{title}</Text>
+    <View style={{ paddingHorizontal: space[20], marginBottom: space[28] }}>
+      <Text style={{ fontSize: font.size.sm, fontWeight: '700', textTransform: 'uppercase', color: colors.textMuted, marginBottom: space[8] }}>
+        {title}
+      </Text>
       {children}
     </View>
   );
 }
-
-function Row({ label, color, children }: { label: string; color: string; children: React.ReactNode }) {
-  return (
-    <View style={styles.row}>
-      <Text style={[styles.rowLabel, { color }]}>{label}</Text>
-      {children}
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
-  container: { flex: 1 },
-  content: { padding: 20, paddingBottom: 120 },
-  header: { fontSize: 24, fontWeight: '700', marginBottom: 16 },
-  section: { marginBottom: 28 },
-  sectionTitle: { fontSize: 13, fontWeight: '700', textTransform: 'uppercase', marginBottom: 8, opacity: 0.7 },
-  row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 44 },
-  rowLabel: { fontSize: 15, flex: 1, marginRight: 12 },
-  themeRow: { flexDirection: 'row', gap: 8 },
-  themeChip: { borderWidth: StyleSheet.hairlineWidth, borderRadius: 8, paddingHorizontal: 14, paddingVertical: 8 },
-  linkRow: { paddingVertical: 10, minHeight: 44, justifyContent: 'center' },
-  link: { fontSize: 15, fontWeight: '600' },
-  hint: { fontSize: 12, marginTop: 8 },
-});

@@ -2,15 +2,21 @@
 
 ## Product Overview
 
-Spendtr is a cross-platform (iOS + Android) mobile app for manually tracking personal expenses and recurring subscriptions, with real multi-currency support, that never requires linking a bank account and stores all data on-device by default. Built for privacy-conscious users, expats/immigrants, and subscription-fatigued professionals who have specifically rejected bank-linked finance apps like Rocket Money, YNAB, Copilot, and Monarch.
+Spendtr is a cross-platform (iOS + Android) mobile app for manually tracking personal expenses, subscriptions, budgets, goals, and debts, with real multi-currency support and multiple accounts, that never requires linking a bank account and never requires any account — including for backup. Built for privacy-conscious users, expats/immigrants, and subscription-fatigued professionals who have specifically rejected bank-linked finance apps like Rocket Money, YNAB, Copilot, and Monarch.
+
+**Competitive positioning:** Spendtr targets feature parity with Cashew (the strongest existing open-source competitor) plus five specific, evidence-backed fixes: a historical account running-balance view, the ability to split one transaction across multiple categories, explicit tested performance budgets, a Pro purchase that works across both iOS and Android, and a backup feature that works with any storage provider — never requiring a Google account. Full rationale: `docs/PRD.md` §2.
 
 Full product rationale: `docs/PRD.md`. Full market/customer validation: see the opportunity research memo this project was built from.
 
-## MVP Scope
+## Phased Scope
 
-No-account local storage · fast manual transaction entry (target <5s) · multi-currency with base-currency conversion · categories · recurring subscription tracking with local renewal reminders · simple spending reports · basic monthly budgets · CSV/PDF export · biometric app lock · one-time Pro unlock (IAP).
+**Phase 1 (real MVP target, ~3–4 weeks):** no-account local storage, fast manual entry (target <5s), accounts, multi-currency, categories, recurring transactions (subscriptions/bills/income) with reminders, monthly budgets with category limits, **account running-balance history**, biometric lock, CSV export, dark/light mode + accent color, tested performance budgets.
 
-**Explicitly not in MVP:** bank account linking (permanent exclusion), cloud sync, AI insights, investment tracking, shared budgets, envelope budgeting, third-party analytics. Full list: `docs/PRD.md` §9.
+**Phase 2 (feature parity + remaining differentiators):** transaction splitting, goals, debts, flexible budget periods, search/filter, bulk edit/delete, CSV import, cross-platform Pro restore, backup/restore to any provider via native file picker.
+
+**Phase 3 (deferred, not built without a scope update):** real-time multi-device sync, localization, home screen widgets, app-link automation.
+
+**Permanently excluded, all phases:** bank account linking, any mandatory account/login, third-party analytics, AI insights, bill negotiation, ads, Google Sheets import. Full detail: `docs/PRD.md` §5–6.
 
 ## Technology Stack
 
@@ -120,4 +126,21 @@ npx jest                     # Unit + component tests
 npx eas build --profile preview --platform all   # Beta build for both stores
 npx eas submit --platform ios                     # Submit to App Store
 npx eas submit --platform android                 # Submit to Google Play
+```
+
+## End-to-End Tests (Maestro)
+
+Flows live under `.maestro/` (`docs/TESTING_STRATEGY.md` §3, flows 1–5 — the Phase 1 minimum). Each top-level flow calls the shared `subflows/onboarding.yaml` first, so every flow runs standalone against a freshly cleared app state.
+
+```bash
+# Install Maestro once (https://maestro.mobile.dev): curl -Ls "https://get.maestro.mobile.dev" | bash
+
+npx expo run:android         # build the dev client onto a running emulator/device first
+maestro test .maestro/01-onboarding-and-first-transaction.yaml
+maestro test .maestro/02-add-recurring.yaml
+maestro test .maestro/03-free-tier-paywall.yaml   # stops at the paywall — the sandbox purchase step needs a RevenueCat sandbox tester signed in on-device, which is per-developer setup
+maestro test .maestro/04-export-csv.yaml
+maestro test .maestro/05-account-balance-view.yaml
+# or run them all:
+maestro test .maestro
 ```

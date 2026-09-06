@@ -114,6 +114,12 @@ export async function getRate(db: Database, fromCode: string, toCode: string): P
   return null;
 }
 
+/** Most recent fetch time for `baseCode`'s cached rates, or null if never fetched — Settings' "Exchange rates" row. */
+export async function getLatestFetchTime(db: Database, baseCode: string): Promise<string | null> {
+  const rows = await db.select().from(exchangeRatesCache).where(eq(exchangeRatesCache.baseCurrencyCode, baseCode)).limit(1);
+  return rows[0]?.fetchedAt ?? null;
+}
+
 export interface ConversionResult {
   baseAmountMinor: number | null;
   baseCurrencyCode: string;

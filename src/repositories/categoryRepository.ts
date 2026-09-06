@@ -30,6 +30,7 @@ export async function create(input: CategoryInput): Promise<Category> {
       id: randomUUID(),
       name: parsed.name,
       icon: parsed.icon,
+      iconType: parsed.iconType,
       color: parsed.color,
       type: parsed.type,
       isDefault: false,

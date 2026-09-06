@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#0B0F14"/>
+  <g transform="translate(552 234)">
+    <g transform="scale(4)">
+      <rect x="2.5" y="5" width="19" height="3.5" rx="1.75" fill="#5B5FEF"/>
+      <rect x="2.5" y="10.25" width="12.5" height="3.5" rx="1.75" fill="#5B5FEF"/>
+      <rect x="2.5" y="15.5" width="7" height="3.5" rx="1.75" fill="#9A9DF7"/>
+    </g>
+  </g>
+  <text x="600" y="345" font-family="IBM Plex Sans, sans-serif" font-weight="700" font-size="72" letter-spacing="-1.5" fill="#F2F4F7" text-anchor="middle">Spend<tspan fill="#5B5FEF">Tr</tspan></text>
+  <text x="600" y="392" font-family="IBM Plex Sans, sans-serif" font-weight="600" font-size="20" letter-spacing="1" fill="#9AA4B2" text-anchor="middle">EVERY EXPENSE, ON YOUR PHONE ONLY.</text>
+</svg>

@@ -1,0 +1,19 @@
+# Shared subflow: fresh install through a landed, empty Home screen
+# (docs/USER_FLOWS.md Flow 1). Included via `runFlow` by every other flow so
+# each one starts from the same known state without duplicating the walk.
+appId: com.spendtr.app
+---
+- launchApp:
+    clearState: true
+- assertVisible: "Get Started"
+- tapOn: "Get Started"
+- assertVisible: "Choose your base currency"
+- tapOn: "Continue"
+- assertVisible: "Set up your first account"
+- tapOn:
+    id: "account-name-input"
+- inputText: "Cash"
+- tapOn: "Continue"
+- assertVisible: "A couple of optional things"
+- tapOn: "Start Tracking"
+- assertVisible: "Home"

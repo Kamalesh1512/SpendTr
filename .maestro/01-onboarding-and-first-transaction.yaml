@@ -1,0 +1,17 @@
+# Flow 1 + 2 (docs/USER_FLOWS.md, docs/TESTING_STRATEGY.md §3 flow 1):
+# fresh install → onboarding → first transaction logged.
+appId: com.spendtr.app
+---
+- runFlow: subflows/onboarding.yaml
+- tapOn:
+    id: "quick-add"
+- assertVisible:
+    id: "amount-input"
+- tapOn:
+    id: "amount-input"
+- inputText: "25"
+- tapOn: "Groceries"
+- tapOn:
+    id: "save-transaction"
+- assertVisible: "Home"
+- assertVisible: "Groceries"

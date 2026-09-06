@@ -10,7 +10,7 @@
 // utils/money.ts (majorToMinor) at save time — this component never does
 // currency math itself.
 import { StyleSheet, Text, TextInput, View } from 'react-native';
-import { useAppColors } from '../hooks/useAppColors';
+import { useTheme } from '../theme/ThemeProvider';
 
 interface AmountInputProps {
   value: string; // natural decimal text as typed, e.g. "18.4"
@@ -38,13 +38,14 @@ function sanitize(raw: string, decimalDigits: number): string {
 }
 
 export function AmountInput({ value, onChangeValue, symbol, decimalDigits }: AmountInputProps) {
-  const colors = useAppColors();
+  const { colors } = useTheme();
 
   return (
     <View style={styles.container}>
       <View style={styles.row}>
         <Text style={[styles.symbol, { color: colors.text }]}>{symbol}</Text>
         <TextInput
+          testID="amount-input"
           value={value}
           onChangeText={(text) => onChangeValue(sanitize(text, decimalDigits))}
           placeholder={decimalDigits > 0 ? `0.${'0'.repeat(decimalDigits)}` : '0'}

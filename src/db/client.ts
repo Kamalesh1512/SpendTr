@@ -10,7 +10,6 @@ import * as schema from './schema';
 
 export const DB_NAME = 'spendtr.db';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type Database = BaseSQLiteDatabase<'sync', any, typeof schema>;
 
 let dbInstance: Database | null = null;

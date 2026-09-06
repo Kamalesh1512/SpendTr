@@ -1,0 +1,19 @@
+# TESTING_STRATEGY.md §3 flow 2: add a recurring transaction → verify it
+# appears in the upcoming list.
+appId: com.spendtr.app
+---
+- runFlow: subflows/onboarding.yaml
+- tapOn: "Recurring"
+- tapOn:
+    id: "add-recurring-button"
+- assertVisible: "Subscription"
+- tapOn:
+    id: "recurring-name-input"
+- inputText: "Netflix"
+- tapOn:
+    id: "amount-input"
+- inputText: "15"
+- tapOn: "Groceries"
+- tapOn:
+    id: "save-recurring"
+- assertVisible: "Netflix"

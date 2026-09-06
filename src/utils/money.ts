@@ -16,10 +16,11 @@ export function isPositiveIntegerAmount(amountMinor: number): boolean {
 
 export function formatAmountMinor(
   amountMinor: number,
-  opts: { symbol: string; decimalDigits: number },
+  opts: { symbol: string; decimalDigits: number; symbolPosition?: 'pre' | 'post' },
 ): string {
   const major = minorToMajor(amountMinor, opts.decimalDigits);
-  return `${opts.symbol}${major.toFixed(opts.decimalDigits)}`;
+  const body = major.toFixed(opts.decimalDigits);
+  return opts.symbolPosition === 'post' ? `${body} ${opts.symbol}` : `${opts.symbol}${body}`;
 }
 
 /**
@@ -29,6 +30,15 @@ export function formatAmountMinor(
  * currency, so amounts read consistently across a mixed-currency list.
  */
 const INDIAN_GROUPING_CURRENCIES = new Set(['INR', 'NPR', 'PKR', 'BDT', 'LKR']);
+
+/**
+ * Currencies whose symbol conventionally trails the amount ("120 kr", not
+ * "kr120") rather than leading it, per
+ * docs/design_system/readme.md ("kr and zl trail"). Symbol position is a
+ * display concern, not a DATABASE_SCHEMA.md column — this list is that
+ * concern's single source of truth.
+ */
+const POST_SYMBOL_CURRENCIES = new Set(['SEK', 'NOK', 'DKK', 'PLN', 'CZK', 'HUF']);
 
 function groupIndian(digits: string): string {
   if (digits.length <= 3) return digits;
@@ -58,7 +68,11 @@ export function formatGroupedAmountMinor(
   const grouped = INDIAN_GROUPING_CURRENCIES.has(opts.currencyCode)
     ? groupIndian(intPart!)
     : groupWestern(intPart!);
-  return `${negative ? '-' : ''}${opts.symbol}${grouped}${decPart ? `.${decPart}` : ''}`;
+  const body = `${grouped}${decPart ? `.${decPart}` : ''}`;
+  const withSymbol = POST_SYMBOL_CURRENCIES.has(opts.currencyCode)
+    ? `${body} ${opts.symbol}`
+    : `${opts.symbol}${body}`;
+  return `${negative ? '-' : ''}${withSymbol}`;
 }
 
 /**

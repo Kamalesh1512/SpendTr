@@ -1,5 +1,5 @@
 import Purchases from 'react-native-purchases';
-import { purchasePro, reconcileProEntitlement, restorePurchases } from '@/services/purchases';
+import { linkProToEmail, purchasePro, reconcileProEntitlement, restorePurchases } from '@/services/purchases';
 import * as settingsRepository from '@/repositories/settingsRepository';
 import { setUpSeededDb, tearDown } from '../repositories/testSetup';
 
@@ -30,5 +30,10 @@ describe('purchases service', () => {
   test('restorePurchases throws if Purchases was never configured', async () => {
     await expect(restorePurchases()).rejects.toThrow();
     expect(Purchases.restorePurchases).not.toHaveBeenCalled();
+  });
+
+  test('linkProToEmail throws if Purchases was never configured', async () => {
+    await expect(linkProToEmail('person@example.com')).rejects.toThrow();
+    expect(Purchases.logIn).not.toHaveBeenCalled();
   });
 });

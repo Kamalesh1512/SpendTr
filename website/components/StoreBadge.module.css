@@ -1,0 +1,93 @@
+.badge {
+  display: flex;
+  align-items: center;
+  border-radius: var(--radius-md);
+  transition:
+    background var(--duration-fast) var(--ease-standard),
+    color var(--duration-fast) var(--ease-standard);
+}
+
+.text {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  line-height: 1.1;
+  text-align: left;
+}
+
+.kicker {
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.name {
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.playImageLink {
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--radius-md);
+  transition: opacity var(--duration-fast) var(--ease-standard);
+}
+
+.playImageLink:hover {
+  opacity: 0.85;
+}
+
+/* header size */
+.header {
+  height: 40px;
+  gap: 9px;
+}
+
+.header.apple {
+  padding: 0 14px;
+}
+
+.header .kicker {
+  font-size: 9px;
+  letter-spacing: 0.5px;
+}
+
+.header .name {
+  font-size: 13px;
+}
+
+/* large size (hero / final CTA) */
+.large {
+  height: 56px;
+  gap: 12px;
+  border-radius: var(--radius-lg);
+}
+
+.large.apple {
+  padding: 0 22px;
+}
+
+.large .kicker {
+  font-size: 10px;
+  letter-spacing: 0.6px;
+}
+
+.large .name {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.apple {
+  border: var(--border-hairline, 0.5px) solid var(--border);
+  color: var(--text);
+  opacity: 0.45;
+  cursor: default;
+}
+
+.apple.live {
+  opacity: 1;
+  cursor: pointer;
+}
+
+.apple .kicker {
+  color: var(--text-muted);
+}

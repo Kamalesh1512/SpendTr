@@ -1,4 +1,11 @@
-import { convertAmountMinor, formatAmountMinor, isPositiveIntegerAmount, majorToMinor, minorToMajor } from '@/utils/money';
+import {
+  convertAmountMinor,
+  formatAmountMinor,
+  formatGroupedAmountMinor,
+  isPositiveIntegerAmount,
+  majorToMinor,
+  minorToMajor,
+} from '@/utils/money';
 
 describe('money utils', () => {
   test('minorToMajor / majorToMinor round-trip for 2-decimal currency', () => {
@@ -31,5 +38,26 @@ describe('money utils', () => {
   test('convertAmountMinor handles a 2-decimal -> 0-decimal conversion (e.g. USD -> JPY)', () => {
     // $10.00 at rate 149.5 => 1495 JPY (0 decimals)
     expect(convertAmountMinor(1000, 149.5, 2, 0)).toBe(1495);
+  });
+
+  test('formatGroupedAmountMinor groups INR as 2-2-3 (lakh/crore), not 3-3-3', () => {
+    expect(
+      formatGroupedAmountMinor(1000000000, { symbol: '₹', decimalDigits: 2, currencyCode: 'INR' }),
+    ).toBe('₹1,00,00,000.00');
+  });
+
+  test('formatGroupedAmountMinor groups USD as 3-3-3', () => {
+    expect(
+      formatGroupedAmountMinor(100000000, { symbol: '$', decimalDigits: 2, currencyCode: 'USD' }),
+    ).toBe('$1,000,000.00');
+  });
+
+  test('formatGroupedAmountMinor trails the symbol for post-symbol currencies (e.g. SEK)', () => {
+    expect(formatGroupedAmountMinor(12000, { symbol: 'kr', decimalDigits: 2, currencyCode: 'SEK' })).toBe('120.00 kr');
+  });
+
+  test('formatAmountMinor supports a trailing symbolPosition without changing the default', () => {
+    expect(formatAmountMinor(1234, { symbol: '$', decimalDigits: 2 })).toBe('$12.34');
+    expect(formatAmountMinor(1234, { symbol: 'kr', decimalDigits: 2, symbolPosition: 'post' })).toBe('12.34 kr');
   });
 });

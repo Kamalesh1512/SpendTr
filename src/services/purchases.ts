@@ -3,6 +3,7 @@
 // "RevenueCat Configuration"). RevenueCat/store state is always the source
 // of truth; user_settings.is_pro is a local cache reconciled here.
 import { Platform } from 'react-native';
+import * as Crypto from 'expo-crypto';
 import Purchases, { LOG_LEVEL, type CustomerInfo, type PurchasesOfferings, type PurchasesPackage } from 'react-native-purchases';
 import * as settingsRepository from '../repositories/settingsRepository';
 import { ValidationError } from '../types/errors';
@@ -55,5 +56,31 @@ export async function restorePurchases(): Promise<boolean> {
   const customerInfo = await Purchases.restorePurchases();
   const isPro = isProEntitlementActive(customerInfo);
   await settingsRepository.update({ isPro });
+  return isPro;
+}
+
+/**
+ * Client-side hash — the raw email never leaves the device
+ * (docs/SECURITY.md, docs/CLAUDE.md §11). Normalized first so the same
+ * address always hashes identically regardless of case/whitespace.
+ */
+async function hashEmail(email: string): Promise<string> {
+  return Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, email.trim().toLowerCase());
+}
+
+/**
+ * Cross-platform Pro continuity (docs/API_DESIGN.md §4, Gap #4 fix): links
+ * this RevenueCat identity to a hashed email so a Pro purchase made on one
+ * store resolves on the same email entered on the other platform's install.
+ * No Spendtr backend is involved — RevenueCat's own hosted identity
+ * resolution does the work. `proRestoreLinked` just remembers that this
+ * device has gone through the opt-in once, for the Settings UI.
+ */
+export async function linkProToEmail(email: string): Promise<boolean> {
+  if (!configured) throw new ValidationError('Purchases is not configured (missing RevenueCat API key).');
+  const hashedEmail = await hashEmail(email);
+  const { customerInfo } = await Purchases.logIn(hashedEmail);
+  const isPro = isProEntitlementActive(customerInfo);
+  await settingsRepository.update({ isPro, proRestoreLinked: true });
   return isPro;
 }

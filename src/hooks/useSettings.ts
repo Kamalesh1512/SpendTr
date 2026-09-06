@@ -4,12 +4,12 @@
 // followed by a refetch from SQLite).
 //
 // The fetched row is held in one module-level store shared by every
-// useSettings() call site (useAppColors, the root lock screen, Settings,
+// useSettings() call site (ThemeProvider, the root lock screen, Settings,
 // Reports, ...) via useSyncExternalStore, rather than each call site
 // keeping its own useState copy. With independent per-instance state, a
 // write from one screen (e.g. Settings' theme toggle) only ever updated
 // that screen's own copy — every other mounted consumer (crucially
-// useAppColors, since it calls useSettings() itself) kept rendering the
+// ThemeProvider, since it calls useSettings() itself) kept rendering the
 // stale value until it happened to remount, which is why switching
 // Appearance to Light didn't visibly re-theme the app.
 import { useCallback, useEffect, useSyncExternalStore } from 'react';

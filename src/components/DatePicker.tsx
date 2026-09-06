@@ -7,10 +7,9 @@
 // than the last two days instead of growing more quick-pick buttons.
 import { useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
-import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
-import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
-import { useAppColors } from '../hooks/useAppColors';
-import type { Palette } from '../theme/colors';
+import DateTimePicker, { type DateTimePickerChangeEvent } from '@react-native-community/datetimepicker';
+import { Platform, Pressable, Text, View } from 'react-native';
+import { useTheme, type Theme } from '../theme/ThemeProvider';
 import { todayIsoDate } from '../utils/date';
 
 interface DatePickerProps {
@@ -31,7 +30,7 @@ function formatDisplay(iso: string): string {
 }
 
 export function DatePicker({ value, onChange }: DatePickerProps) {
-  const colors = useAppColors();
+  const { colors, space, radius, font, borderWidth, hitMin } = useTheme();
   const [pickerOpen, setPickerOpen] = useState(false);
 
   const today = todayIsoDate();
@@ -40,22 +39,25 @@ export function DatePicker({ value, onChange }: DatePickerProps) {
   const isYesterday = value === yesterday;
   const isCustom = !isToday && !isYesterday;
 
-  function handlePickerChange(event: DateTimePickerEvent, selected?: Date) {
+  function handleValueChange(_event: DateTimePickerChangeEvent, selected: Date) {
     if (Platform.OS === 'android') setPickerOpen(false);
-    if (event.type === 'dismissed' || !selected) return;
     onChange(todayIsoDate(selected));
+  }
+
+  function handleDismiss() {
+    if (Platform.OS === 'android') setPickerOpen(false);
   }
 
   return (
     <View>
-      <View style={styles.row}>
-        <Chip label="Today" selected={isToday} colors={colors} onPress={() => onChange(today)} />
-        <Chip label="Yesterday" selected={isYesterday} colors={colors} onPress={() => onChange(yesterday)} />
+      <View style={{ flexDirection: 'row', gap: space[8] }}>
+        <Chip label="Today" selected={isToday} theme={{ colors, space, radius, font, borderWidth, hitMin }} onPress={() => onChange(today)} />
+        <Chip label="Yesterday" selected={isYesterday} theme={{ colors, space, radius, font, borderWidth, hitMin }} onPress={() => onChange(yesterday)} />
         <Chip
           label={isCustom ? formatDisplay(value) : 'Custom'}
           selected={isCustom}
           icon="calendar-outline"
-          colors={colors}
+          theme={{ colors, space, radius, font, borderWidth, hitMin }}
           onPress={() => setPickerOpen(true)}
         />
       </View>
@@ -64,12 +66,17 @@ export function DatePicker({ value, onChange }: DatePickerProps) {
           value={isValidDate(value) ? new Date(`${value}T00:00:00`) : new Date()}
           mode="date"
           display={Platform.OS === 'ios' ? 'inline' : 'default'}
-          onChange={handlePickerChange}
+          onValueChange={handleValueChange}
+          onDismiss={handleDismiss}
         />
       ) : null}
       {Platform.OS === 'ios' && pickerOpen ? (
-        <Pressable accessibilityRole="button" onPress={() => setPickerOpen(false)} style={styles.doneRow}>
-          <Text style={{ color: colors.primary, fontWeight: '700' }}>Done</Text>
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => setPickerOpen(false)}
+          style={{ alignItems: 'flex-end', paddingVertical: space[10], minHeight: hitMin, justifyContent: 'center' }}
+        >
+          <Text style={{ color: colors.accent, fontWeight: '700' }}>Done</Text>
         </Pressable>
       ) : null}
     </View>
@@ -83,48 +90,46 @@ function isValidDate(iso: string): boolean {
 function Chip({
   label,
   selected,
-  colors,
+  theme,
   onPress,
   icon,
 }: {
   label: string;
   selected: boolean;
-  colors: Palette;
+  theme: Pick<Theme, 'colors' | 'space' | 'radius' | 'font' | 'borderWidth' | 'hitMin'>;
   onPress: () => void;
   icon?: keyof typeof Ionicons.glyphMap;
 }) {
+  const { colors, space, radius, font, borderWidth, hitMin } = theme;
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityState={{ selected }}
       onPress={onPress}
-      style={[
-        styles.chip,
-        { borderColor: selected ? colors.primary : colors.border, backgroundColor: selected ? colors.primary : 'transparent' },
-      ]}
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexGrow: 1,
+        flexBasis: 0,
+        borderWidth: borderWidth.hairline,
+        borderRadius: radius.sm,
+        paddingHorizontal: space[10],
+        paddingVertical: space[10],
+        minHeight: hitMin,
+        borderColor: selected ? colors.accent : colors.border,
+        backgroundColor: selected ? colors.accent : 'transparent',
+      }}
     >
-      {icon ? <Ionicons name={icon} size={14} color={selected ? '#fff' : colors.text} style={styles.chipIcon} /> : null}
-      <Text numberOfLines={1} style={{ color: selected ? '#fff' : colors.text, fontWeight: selected ? '700' : '500', fontSize: 13 }}>
+      {icon ? (
+        <Ionicons name={icon} size={14} color={selected ? colors.accentContrast : colors.text} style={{ marginRight: space[4] }} />
+      ) : null}
+      <Text
+        numberOfLines={1}
+        style={{ color: selected ? colors.accentContrast : colors.text, fontWeight: selected ? '700' : '500', fontSize: font.size.sm }}
+      >
         {label}
       </Text>
     </Pressable>
   );
 }
-
-const styles = StyleSheet.create({
-  row: { flexDirection: 'row', gap: 8 },
-  chip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexGrow: 1,
-    flexBasis: 0,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 10,
-    minHeight: 44,
-  },
-  chipIcon: { marginRight: 4 },
-  doneRow: { alignItems: 'flex-end', paddingVertical: 10, minHeight: 44, justifyContent: 'center' },
-});

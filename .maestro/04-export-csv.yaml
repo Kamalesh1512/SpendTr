@@ -1,0 +1,12 @@
+# TESTING_STRATEGY.md §3 flow 4: export data (CSV) → share sheet opens.
+# The OS share sheet is outside the app's own view hierarchy — this flow
+# confirms the app gets there without crashing; visually confirm the sheet
+# itself when watching the run.
+appId: com.spendtr.app
+---
+- runFlow: subflows/onboarding.yaml
+- tapOn: "Settings"
+- tapOn: "Export as CSV"
+- extendedWaitUntil:
+    visible: "Share"
+    timeout: 8000

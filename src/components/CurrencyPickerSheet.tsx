@@ -6,7 +6,7 @@
 import { useMemo, useState } from 'react';
 import { FlatList, Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAppColors } from '../hooks/useAppColors';
+import { useTheme } from '../theme/ThemeProvider';
 import { useRecentCurrenciesStore } from '../stores/useRecentCurrenciesStore';
 import type { Currency } from '../hooks/useCurrencies';
 
@@ -25,7 +25,7 @@ export function CurrencyPickerSheet({
   onSelect,
   onClose,
 }: CurrencyPickerSheetProps) {
-  const colors = useAppColors();
+  const { colors, space, radius, font, borderWidth } = useTheme();
   const [query, setQuery] = useState('');
   const recentCodes = useRecentCurrenciesStore((s) => s.recentCodes);
   const markUsed = useRecentCurrenciesStore((s) => s.markUsed);
@@ -47,45 +47,52 @@ export function CurrencyPickerSheet({
     setQuery('');
   }
 
+  // Fully unmount rather than toggling RN Modal's own `visible` prop on an
+  // always-mounted instance: on Android/Fabric, a Modal left mounted with
+  // visible flipping true/false can leave a stale native view registered,
+  // which crashes ("addViewAt: ... child already has a parent") the next
+  // time any Modal in the tree mounts.
+  if (!visible) return null;
+
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+    <Modal visible transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.overlay}>
         <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel="Close currency picker" />
-        <View style={[styles.sheet, { backgroundColor: colors.surface }]}>
-          <View style={styles.grabberRow}>
-            <View style={[styles.grabber, { backgroundColor: colors.border }]} />
+        <View style={[styles.sheet, { backgroundColor: colors.surface, borderTopLeftRadius: radius['2xl'], borderTopRightRadius: radius['2xl'] }]}>
+          <View style={[styles.grabberRow, { paddingTop: space[10], paddingBottom: space[4] }]}>
+            <View style={[styles.grabber, { backgroundColor: colors.border, borderRadius: radius.sm - 6 }]} />
           </View>
 
-          <View style={styles.header}>
-            <Text style={[styles.title, { color: colors.text }]}>Currency</Text>
+          <View style={[styles.header, { paddingHorizontal: space[20], paddingTop: space[8], paddingBottom: space[14] }]}>
+            <Text style={{ fontSize: font.size.lg, fontWeight: '700', color: colors.text }}>Currency</Text>
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="Close"
               onPress={onClose}
-              style={[styles.closeButton, { backgroundColor: colors.background }]}
+              style={[styles.closeButton, { backgroundColor: colors.bg, borderRadius: radius.full }]}
             >
               <Ionicons name="close" size={18} color={colors.textMuted} />
             </Pressable>
           </View>
 
-          <View style={styles.searchWrap}>
-            <View style={[styles.search, { backgroundColor: colors.background, borderColor: colors.border }]}>
+          <View style={{ paddingHorizontal: space[20], paddingBottom: space[14] }}>
+            <View style={[styles.search, { backgroundColor: colors.bg, borderColor: colors.border, borderRadius: radius.md, paddingHorizontal: space[12], gap: space[8] }]}>
               <Ionicons name="search" size={17} color={colors.textMuted} />
               <TextInput
                 value={query}
                 onChangeText={setQuery}
                 placeholder={`Search ${currencies.length} currencies`}
                 placeholderTextColor={colors.textMuted}
-                style={[styles.searchInput, { color: colors.text }]}
+                style={{ flex: 1, fontSize: font.size.bodySm, paddingVertical: space[10], color: colors.text }}
                 accessibilityLabel="Search currency"
               />
             </View>
           </View>
 
           {recent.length > 0 && !query.trim() ? (
-            <View style={styles.recentWrap}>
-              <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>Recent</Text>
-              <View style={styles.recentRow}>
+            <View style={{ paddingHorizontal: space[20], paddingBottom: space[12] }}>
+              <Text style={[styles.sectionLabel, { color: colors.textMuted, marginBottom: space[8] }]}>Recent</Text>
+              <View style={{ flexDirection: 'row', gap: space[8] }}>
                 {recent.map((c) => {
                   const selected = c.code === selectedCode;
                   return (
@@ -96,15 +103,19 @@ export function CurrencyPickerSheet({
                       style={[
                         styles.recentChip,
                         {
-                          borderColor: selected ? colors.primary : colors.border,
-                          backgroundColor: selected ? colors.primary + '24' : 'transparent',
+                          borderRadius: radius.sm,
+                          paddingHorizontal: space[12],
+                          paddingVertical: space[8],
+                          gap: space[6],
+                          borderColor: selected ? colors.accent : colors.border,
+                          backgroundColor: selected ? colors.accent + '24' : 'transparent',
                         },
                       ]}
                     >
-                      <Text style={{ color: colors.text, fontSize: 14, fontWeight: selected ? '700' : '600' }}>
+                      <Text style={{ color: colors.text, fontSize: font.size.xs, fontWeight: selected ? '700' : '600' }}>
                         {c.symbol} {c.code}
                       </Text>
-                      {selected ? <Ionicons name="checkmark" size={15} color={colors.primary} /> : null}
+                      {selected ? <Ionicons name="checkmark" size={15} color={colors.accent} /> : null}
                     </Pressable>
                   );
                 })}
@@ -112,8 +123,10 @@ export function CurrencyPickerSheet({
             </View>
           ) : null}
 
-          <View style={[styles.listWrap, { borderTopColor: colors.border }]}>
-            <Text style={[styles.sectionLabel, styles.listLabel, { color: colors.textMuted }]}>All currencies</Text>
+          <View style={{ flex: 1, borderTopWidth: borderWidth.hairline, borderTopColor: colors.border }}>
+            <Text style={[styles.sectionLabel, { color: colors.textMuted, paddingHorizontal: space[20], paddingTop: space[12], paddingBottom: space[6] }]}>
+              All currencies
+            </Text>
             <FlatList
               data={filtered}
               keyExtractor={(item) => item.code}
@@ -123,16 +136,19 @@ export function CurrencyPickerSheet({
                   <Pressable
                     accessibilityRole="button"
                     onPress={() => select(item)}
-                    style={[styles.row, { borderColor: colors.border }]}
+                    style={[
+                      styles.row,
+                      { borderColor: colors.border, gap: space[12], paddingHorizontal: space[20], paddingVertical: space[12], borderBottomWidth: borderWidth.hairline },
+                    ]}
                   >
-                    <View style={[styles.symbolTile, { backgroundColor: colors.background, borderColor: colors.border }]}>
-                      <Text style={{ color: colors.text, fontSize: 15, fontWeight: '700' }}>{item.symbol}</Text>
+                    <View style={[styles.symbolTile, { backgroundColor: colors.bg, borderColor: colors.border, borderRadius: radius.sm, borderWidth: borderWidth.hairline }]}>
+                      <Text style={{ color: colors.text, fontSize: font.size.bodySm, fontWeight: '700' }}>{item.symbol}</Text>
                     </View>
                     <View style={{ flex: 1 }}>
-                      <Text style={[styles.code, { color: colors.text }]}>{item.code}</Text>
-                      <Text style={[styles.name, { color: colors.textMuted }]}>{item.name}</Text>
+                      <Text style={{ fontSize: font.size.bodySm, fontWeight: '600', color: colors.text }}>{item.code}</Text>
+                      <Text style={{ fontSize: font.size.xs, color: colors.textMuted, marginTop: 2 }}>{item.name}</Text>
                     </View>
-                    {selected ? <Ionicons name="checkmark" size={20} color={colors.primary} /> : null}
+                    {selected ? <Ionicons name="checkmark" size={20} color={colors.accent} /> : null}
                   </Pressable>
                 );
               }}
@@ -146,23 +162,14 @@ export function CurrencyPickerSheet({
 
 const styles = StyleSheet.create({
   overlay: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.55)' },
-  sheet: { height: '74%', borderTopLeftRadius: 20, borderTopRightRadius: 20, overflow: 'hidden' },
-  grabberRow: { alignItems: 'center', paddingTop: 10, paddingBottom: 4 },
-  grabber: { width: 40, height: 4, borderRadius: 2 },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 8, paddingBottom: 14 },
-  title: { fontSize: 18, fontWeight: '700' },
-  closeButton: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
-  searchWrap: { paddingHorizontal: 20, paddingBottom: 14 },
-  search: { flexDirection: 'row', alignItems: 'center', gap: 8, borderWidth: StyleSheet.hairlineWidth, borderRadius: 10, paddingHorizontal: 12, minHeight: 44 },
-  searchInput: { flex: 1, fontSize: 15, paddingVertical: 10 },
-  recentWrap: { paddingHorizontal: 20, paddingBottom: 12 },
-  sectionLabel: { fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 8 },
-  recentRow: { flexDirection: 'row', gap: 8 },
-  recentChip: { flexDirection: 'row', alignItems: 'center', gap: 6, borderWidth: StyleSheet.hairlineWidth, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8 },
-  listWrap: { flex: 1, borderTopWidth: StyleSheet.hairlineWidth },
-  listLabel: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 6, marginBottom: 0 },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 20, paddingVertical: 12, borderBottomWidth: StyleSheet.hairlineWidth, minHeight: 56 },
-  symbolTile: { width: 34, height: 34, borderRadius: 8, borderWidth: StyleSheet.hairlineWidth, alignItems: 'center', justifyContent: 'center' },
-  code: { fontSize: 15, fontWeight: '600' },
-  name: { fontSize: 12, marginTop: 2 },
+  sheet: { height: '74%', overflow: 'hidden' },
+  grabberRow: { alignItems: 'center' },
+  grabber: { width: 40, height: 4 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  closeButton: { width: 32, height: 32, alignItems: 'center', justifyContent: 'center' },
+  search: { flexDirection: 'row', alignItems: 'center', borderWidth: StyleSheet.hairlineWidth, minHeight: 44 },
+  sectionLabel: { fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.6 },
+  recentChip: { flexDirection: 'row', alignItems: 'center', borderWidth: StyleSheet.hairlineWidth },
+  row: { flexDirection: 'row', alignItems: 'center', minHeight: 56 },
+  symbolTile: { width: 34, height: 34, alignItems: 'center', justifyContent: 'center' },
 });

@@ -1,0 +1,33 @@
+.hero {
+  max-width: 376px;
+  margin: 0 auto;
+  padding: 10px;
+  background: var(--surface-raised);
+  border-radius: 54px;
+  border: var(--border-hairline) solid var(--border);
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.5);
+}
+
+.hero .clip {
+  border-radius: 44px;
+}
+
+.feature {
+  max-width: 322px;
+  margin: 0 auto;
+  padding: 8px;
+  background: var(--surface-raised);
+  border-radius: 48px;
+  border: var(--border-hairline) solid var(--border);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+}
+
+.feature .clip {
+  border-radius: 40px;
+}
+
+.clip {
+  overflow: hidden;
+  background: var(--bg);
+  aspect-ratio: 390 / 844;
+}

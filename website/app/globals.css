@@ -1,0 +1,152 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
+
+/* Raw palette — never referenced directly outside this file. */
+:root {
+  --indigo-500: #5b5fef;
+  --indigo-600: #4a4edb;
+  --indigo-700: #3b3fb8;
+
+  --ink-950: #0b0f14;
+  --ink-850: #161b22;
+  --ink-800: #1d242e;
+  --ink-700: #2a313c;
+  --ink-500: #5c6672;
+  --ink-400: #9aa4b2;
+  --ink-200: #e3e6ea;
+  --ink-100: #eff1f4;
+  --ink-50: #f7f8fa;
+  --ink-0: #ffffff;
+  --ink-ink: #111417;
+  --ink-text-dark: #f2f4f7;
+}
+
+/* Semantic tokens — dark is the product default. */
+:root {
+  color-scheme: dark;
+
+  --bg: var(--ink-950);
+  --surface: var(--ink-850);
+  --surface-raised: var(--ink-800);
+  --border: var(--ink-700);
+  --text: var(--ink-text-dark);
+  --text-muted: var(--ink-400);
+
+  --brand: var(--indigo-500);
+  --accent: var(--brand);
+  --accent-hover: color-mix(in srgb, var(--accent) 88%, #ffffff);
+  --accent-press: color-mix(in srgb, var(--accent) 86%, #000000);
+  --accent-quiet: color-mix(in srgb, var(--accent) 16%, transparent);
+  --accent-contrast: #ffffff;
+  --focus-ring: 0 0 0 3px var(--accent-quiet);
+
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 12px;
+  --radius-2xl: 20px;
+  --border-hairline: 0.5px;
+
+  --font-ui: 'IBM Plex Sans', -apple-system, 'Segoe UI', Roboto, system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --duration-fast: 140ms;
+  --ease-standard: cubic-bezier(0.2, 0, 0.2, 1);
+
+  /* Legacy aliases kept for /terms, which predates this token set. */
+  --ink: var(--text);
+  --paper: var(--bg);
+  --muted: var(--text-muted);
+  --max-width: 1200px;
+}
+
+[data-theme='light'] {
+  color-scheme: light;
+
+  --bg: var(--ink-50);
+  --surface: var(--ink-0);
+  --surface-raised: var(--ink-0);
+  --border: var(--ink-200);
+  --text: var(--ink-ink);
+  --text-muted: var(--ink-500);
+
+  --brand: var(--indigo-600);
+  --accent: var(--brand);
+  --accent-hover: color-mix(in srgb, var(--accent) 88%, #ffffff);
+  --accent-press: color-mix(in srgb, var(--accent) 86%, #000000);
+  --accent-quiet: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 0ms;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  padding: 0;
+  margin: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-ui), -apple-system, 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-wrap: pretty;
+  overflow-x: clip;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+  transition: color var(--duration-fast) var(--ease-standard);
+}
+
+a:hover {
+  color: var(--accent-hover);
+}
+
+a:active {
+  color: var(--accent-press);
+}
+
+:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-radius: var(--radius-sm);
+}
+
+::selection {
+  background: var(--accent-quiet);
+}
+
+main {
+  min-height: 60vh;
+}
+
+[id] {
+  scroll-margin-top: 69px;
+}
+
+.container {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+h1,
+h2,
+h3 {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  margin: 0;
+}

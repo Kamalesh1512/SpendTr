@@ -1,0 +1,90 @@
+.hero {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: clamp(40px, 7vw, 88px) clamp(20px, 5vw, 48px) clamp(24px, 4vw, 48px);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: clamp(28px, 5vw, 64px);
+}
+
+.heroText {
+  flex: 1 1 380px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: clamp(20px, 2.4vw, 28px);
+}
+
+.heroTitle {
+  font-size: clamp(34px, 5.6vw, 60px);
+  line-height: 1.06;
+  letter-spacing: -0.03em;
+  font-weight: 700;
+  text-wrap: pretty;
+  max-width: 16ch;
+}
+
+.heroSub {
+  font-size: clamp(15px, 1.5vw, 18px);
+  line-height: 1.6;
+  color: var(--text-muted);
+  max-width: 44ch;
+  text-wrap: pretty;
+}
+
+.buttonRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.factLine {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.heroMedia {
+  flex: 1 1 340px;
+  min-width: 0;
+}
+
+.finalCta {
+  border-top: var(--border-hairline) solid var(--border);
+}
+
+.finalCtaInner {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: clamp(56px, 8vw, 112px) clamp(20px, 5vw, 48px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 26px;
+  text-align: center;
+}
+
+.finalCtaTitle {
+  font-size: clamp(28px, 4vw, 46px);
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  font-weight: 700;
+  max-width: 20ch;
+  text-wrap: pretty;
+}
+
+.finalCtaButtons {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.finalCtaNote {
+  font-size: 13px;
+  color: var(--text-muted);
+}

@@ -27,7 +27,13 @@ export class PaywallRequiredError extends Error {
     | 'subscription_limit'
     | 'historical_reports'
     | 'custom_category'
-    | 'export';
+    | 'export'
+    | 'account_limit'
+    | 'split'
+    | 'goals'
+    | 'debts'
+    | 'flexible_budget_periods'
+    | 'backup';
 
   constructor(reason: PaywallRequiredError['reason'], message: string) {
     super(message);

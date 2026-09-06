@@ -13,9 +13,12 @@ export type UserSettingsUpdateInput = Partial<
     | 'baseCurrencyCode'
     | 'biometricLockEnabled'
     | 'theme'
+    | 'accentColor'
     | 'notificationsEnabled'
     | 'onboardingComplete'
     | 'isPro'
+    | 'proRestoreLinked'
+    | 'hideAmountsInSwitcher'
   >
 >;
 
@@ -37,9 +40,12 @@ async function createDefaultSettings(defaultBaseCurrencyCode: string): Promise<U
       baseCurrencyCode: defaultBaseCurrencyCode,
       biometricLockEnabled: false,
       theme: 'system',
+      accentColor: 'default',
       notificationsEnabled: true,
       onboardingComplete: false,
       isPro: false,
+      proRestoreLinked: false,
+      hideAmountsInSwitcher: false,
       createdAt: now,
       updatedAt: now,
     })

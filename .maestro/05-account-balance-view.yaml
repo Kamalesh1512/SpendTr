@@ -1,0 +1,10 @@
+# TESTING_STRATEGY.md §3 flow 5 / docs/USER_FLOWS.md Flow 9 (Gap #1 — the
+# core differentiator): view an account's running balance across months.
+appId: com.spendtr.app
+---
+- runFlow: subflows/onboarding.yaml
+- tapOn:
+    id: "account-pill"
+- assertVisible: "Balance today"
+- assertVisible: "Month by month"
+- assertVisible: "Cash"

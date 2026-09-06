@@ -1,24 +1,32 @@
-// Persistent FAB across the main tabs, opening Add Transaction directly
-// (docs/UI_UX_GUIDELINES.md "Quick-Add FAB").
+// Persistent quick-add across the main tabs, opening Add Transaction
+// directly (docs/design_system/templates/spendtr-app/home.jsx `QuickAdd`;
+// implementation plan §3.4, §8.3 — "a wide docked pill, not a small
+// circular FAB: it is the most-tapped control, so it gets the largest
+// reachable target and shows the currency symbol").
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs, useRouter, useSegments } from 'expo-router';
-import { Pressable, StyleSheet, View } from 'react-native';
-import { useAppColors } from '@/hooks/useAppColors';
+import { Pressable, Text, View } from 'react-native';
+import { useTheme } from '@/theme/ThemeProvider';
+import { useSettings } from '@/hooks/useSettings';
+import { useCurrencies } from '@/hooks/useCurrencies';
 
 export default function TabsLayout() {
-  const colors = useAppColors();
+  const { colors, space, font, radius, shadow, hitMin } = useTheme();
   const router = useRouter();
   const segments = useSegments();
-  // Subscriptions already has its own "+" (Add Subscription) in its header,
-  // so the global Add Transaction FAB is redundant — and confusing — there.
-  const hideFab = segments[segments.length - 1] === 'subscriptions';
+  const { settings } = useSettings();
+  const { currencies } = useCurrencies();
+  const baseCurrency = currencies.find((c) => c.code === (settings?.baseCurrencyCode ?? 'USD'));
+  // Recurring already has its own "+" (Add Recurring) in its header, so the
+  // global quick-add is redundant — and confusing — there.
+  const hideQuickAdd = segments[segments.length - 1] === 'recurring';
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
+    <View style={{ flex: 1, backgroundColor: colors.bg }}>
       <Tabs
         screenOptions={{
           headerShown: false,
-          tabBarActiveTintColor: colors.primary,
+          tabBarActiveTintColor: colors.accent,
           tabBarInactiveTintColor: colors.textMuted,
           tabBarStyle: { backgroundColor: colors.surface, borderTopColor: colors.border },
         }}
@@ -28,9 +36,9 @@ export default function TabsLayout() {
           options={{ title: 'Home', tabBarIcon: ({ color, size }) => <Ionicons name="list" size={size} color={color} /> }}
         />
         <Tabs.Screen
-          name="subscriptions"
+          name="recurring"
           options={{
-            title: 'Subscriptions',
+            title: 'Recurring',
             tabBarIcon: ({ color, size }) => <Ionicons name="repeat" size={size} color={color} />,
           }}
         />
@@ -50,34 +58,50 @@ export default function TabsLayout() {
         />
       </Tabs>
 
-      {hideFab ? null : (
+      {hideQuickAdd ? null : (
         <Pressable
+          testID="quick-add"
           accessibilityRole="button"
           accessibilityLabel="Add transaction"
           onPress={() => router.push('/add-transaction')}
-          style={[styles.fab, { backgroundColor: colors.primary }]}
+          style={[
+            {
+              position: 'absolute',
+              left: space[20],
+              right: space[20],
+              bottom: 84,
+              minHeight: hitMin,
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: space[10],
+              paddingLeft: space[16],
+              paddingRight: space[8],
+              borderRadius: radius.full,
+              backgroundColor: colors.accent,
+            },
+            shadow.fab,
+          ]}
         >
-          <Ionicons name="add" size={28} color="#fff" />
+          <Text style={{ fontSize: font.size.lg, fontWeight: '700', color: colors.accentContrast, opacity: 0.7 }}>
+            {baseCurrency?.symbol ?? '$'}
+          </Text>
+          <Text style={{ flex: 1, fontSize: font.size.md, fontWeight: '700', color: colors.accentContrast }}>
+            Add transaction
+          </Text>
+          <View
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: radius.full,
+              backgroundColor: 'rgba(255,255,255,0.18)',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Ionicons name="add" size={22} color={colors.accentContrast} />
+          </View>
         </Pressable>
       )}
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  fab: {
-    position: 'absolute',
-    right: 20,
-    bottom: 84,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 3 },
-    elevation: 4,
-  },
-});

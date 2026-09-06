@@ -1,10 +1,12 @@
-// Searchable currency list (docs/UI_UX_GUIDELINES.md "Currency picker").
-// Recent-currency surfacing is left for a follow-up; the free-tier
-// paywall trigger for a 2nd non-base currency lives in the calling screen
-// (Add Transaction), not here — this component is presentation-only.
+// Searchable currency list, full-height (embedded in onboarding step 1 —
+// docs/UI_UX_GUIDELINES.md "Currency picker"). Shares CurrencyPickerSheet's
+// row treatment (symbol tile, checkmark) and token set so the two pickers
+// read as the same control in two shells, not two different eras of the app.
 import { useMemo, useState } from 'react';
-import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import { useAppColors } from '../hooks/useAppColors';
+import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../theme/ThemeProvider';
+import { Input } from './ds';
 import type { Currency } from '../hooks/useCurrencies';
 
 interface CurrencyPickerProps {
@@ -14,7 +16,7 @@ interface CurrencyPickerProps {
 }
 
 export function CurrencyPicker({ currencies, selectedCode, onSelect }: CurrencyPickerProps) {
-  const colors = useAppColors();
+  const { colors, space, radius, font, borderWidth } = useTheme();
   const [query, setQuery] = useState('');
 
   const filtered = useMemo(() => {
@@ -25,14 +27,14 @@ export function CurrencyPicker({ currencies, selectedCode, onSelect }: CurrencyP
 
   return (
     <View style={{ flex: 1 }}>
-      <TextInput
-        value={query}
-        onChangeText={setQuery}
-        placeholder="Search currency"
-        placeholderTextColor={colors.textMuted}
-        style={[styles.search, { color: colors.text, borderColor: colors.border }]}
-        accessibilityLabel="Search currency"
-      />
+      <View style={{ paddingBottom: space[14] }}>
+        <Input
+          value={query}
+          onChangeText={setQuery}
+          placeholder={`Search ${currencies.length} currencies`}
+          accessibilityLabel="Search currency"
+        />
+      </View>
       <FlatList
         data={filtered}
         keyExtractor={(item) => item.code}
@@ -41,14 +43,33 @@ export function CurrencyPicker({ currencies, selectedCode, onSelect }: CurrencyP
           return (
             <Pressable
               accessibilityRole="button"
+              accessibilityState={{ selected }}
               onPress={() => onSelect(item)}
-              style={[styles.row, { borderColor: colors.border, backgroundColor: selected ? colors.surface : 'transparent' }]}
+              style={[
+                styles.row,
+                {
+                  gap: space[12],
+                  paddingHorizontal: space[4],
+                  paddingVertical: space[10],
+                  borderBottomColor: colors.border,
+                  borderBottomWidth: borderWidth.hairline,
+                  backgroundColor: selected ? colors.surfaceSelected : 'transparent',
+                },
+              ]}
             >
-              <Text style={[styles.symbol, { color: colors.text }]}>{item.symbol}</Text>
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.code, { color: colors.text }]}>{item.code}</Text>
-                <Text style={[styles.name, { color: colors.textMuted }]}>{item.name}</Text>
+              <View
+                style={[
+                  styles.symbolTile,
+                  { borderRadius: radius.sm, backgroundColor: colors.surfaceRaised, borderColor: colors.border, borderWidth: borderWidth.hairline },
+                ]}
+              >
+                <Text style={{ color: colors.text, fontSize: font.size.bodySm, fontWeight: '700' }}>{item.symbol}</Text>
               </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ color: colors.text, fontSize: font.size.body, fontWeight: '600' }}>{item.code}</Text>
+                <Text style={{ color: colors.textMuted, fontSize: font.size.xs, marginTop: 2 }}>{item.name}</Text>
+              </View>
+              {selected ? <Ionicons name="checkmark" size={20} color={colors.accent} /> : null}
             </Pressable>
           );
         }}
@@ -58,24 +79,6 @@ export function CurrencyPicker({ currencies, selectedCode, onSelect }: CurrencyP
 }
 
 const styles = StyleSheet.create({
-  search: {
-    borderWidth: StyleSheet.hairlineWidth,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    margin: 12,
-    minHeight: 44,
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    minHeight: 44,
-  },
-  symbol: { fontSize: 18, width: 32, textAlign: 'center' },
-  code: { fontSize: 15, fontWeight: '600' },
-  name: { fontSize: 12 },
+  row: { flexDirection: 'row', alignItems: 'center', minHeight: 56 },
+  symbolTile: { width: 34, height: 34, alignItems: 'center', justifyContent: 'center' },
 });

@@ -13,8 +13,21 @@ export function isValidIsoDateString(value: string): boolean {
   return !Number.isNaN(time);
 }
 
+/**
+ * Returns `now`'s calendar date in *local* time as YYYY-MM-DD. Deliberately
+ * not `now.toISOString().slice(0, 10)` — that reads the UTC calendar day,
+ * which is a different date than local for part of every day in any
+ * timezone with a non-zero offset (e.g. the native date picker returns a
+ * `Date` at local midnight of the tapped day; converting that through UTC
+ * shifts the date back a day for any positive-offset timezone such as IST).
+ * Every caller of this function wants "today/this day as the user experiences
+ * it," not the UTC calendar day.
+ */
 export function todayIsoDate(now: Date = new Date()): string {
-  return now.toISOString().slice(0, 10);
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
 /**
@@ -28,9 +41,7 @@ export function isValidOccurredAt(dateIso: string, now: Date = new Date()): bool
   if (!isValidIsoDateString(dateIso)) return false;
   const inputDate = dateIso.slice(0, 10);
   const utcToday = now.toISOString().slice(0, 10);
-  const localToday = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(
-    now.getDate(),
-  ).padStart(2, '0')}`;
+  const localToday = todayIsoDate(now);
   const maxAllowed = utcToday > localToday ? utcToday : localToday;
   return inputDate <= maxAllowed;
 }
@@ -77,4 +88,50 @@ export function daysBetween(fromIso: string, toIso: string): number {
 
 export function nowIso(now: Date = new Date()): string {
   return now.toISOString();
+}
+
+/**
+ * Returns `count` YYYY-MM month keys ending at (and including) `endMonth`
+ * (default: the current month), oldest first — the bucket sequence
+ * AccountRepository.getRunningBalance folds transactions into
+ * (docs/API_DESIGN.md AccountRepository).
+ */
+export function trailingMonthKeys(count: number, endMonth: string = todayIsoDate().slice(0, 7)): string[] {
+  const [endYear, endMon] = endMonth.split('-').map(Number);
+  const months: string[] = [];
+  for (let i = count - 1; i >= 0; i--) {
+    const d = new Date(Date.UTC(endYear!, endMon! - 1 - i, 1));
+    months.push(`${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`);
+  }
+  return months;
+}
+
+/** The first day of the month *after* the given YYYY-MM key, as YYYY-MM-DD. */
+export function monthKeyExclusiveEnd(monthKey: string): string {
+  const [year, month] = monthKey.split('-').map(Number);
+  const d = new Date(Date.UTC(year!, month!, 1));
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
+}
+
+/** Inclusive [start, end] of the calendar month containing `anchorIso`. */
+export function monthBounds(anchorIso: string): { start: string; end: string } {
+  const monthKey = anchorIso.slice(0, 7);
+  const [year, month] = monthKey.split('-').map(Number);
+  const lastDay = new Date(Date.UTC(year!, month!, 0)).getUTCDate();
+  return { start: `${monthKey}-01`, end: `${monthKey}-${String(lastDay).padStart(2, '0')}` };
+}
+
+/**
+ * Inclusive [start, end] of the ISO week (Monday-Sunday) containing
+ * `anchorIso` — the window a `period: 'weekly'` budget resets on
+ * (docs/DATABASE_SCHEMA.md `budgets`, Phase 2).
+ */
+export function weekBounds(anchorIso: string): { start: string; end: string } {
+  const d = new Date(`${anchorIso.slice(0, 10)}T00:00:00.000Z`);
+  const isoDayOfWeek = (d.getUTCDay() + 6) % 7; // Monday = 0 ... Sunday = 6
+  const monday = new Date(d);
+  monday.setUTCDate(d.getUTCDate() - isoDayOfWeek);
+  const sunday = new Date(monday);
+  sunday.setUTCDate(monday.getUTCDate() + 6);
+  return { start: monday.toISOString().slice(0, 10), end: sunday.toISOString().slice(0, 10) };
 }

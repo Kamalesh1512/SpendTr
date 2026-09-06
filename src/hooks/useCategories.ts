@@ -14,6 +14,12 @@ export function useCategories(type?: 'expense' | 'income') {
   }, [type]);
 
   useEffect(() => {
+    // Fetch-on-mount: refetch's first statement (setLoading(true)) runs
+    // synchronously here, which is the documented "refetch-after-write"
+    // pattern this codebase uses throughout (docs/CODING_STANDARDS.md
+    // "State Management") — loading already starts true via useState, so
+    // this doesn't cause an extra visible render.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     refetch();
   }, [refetch]);
 

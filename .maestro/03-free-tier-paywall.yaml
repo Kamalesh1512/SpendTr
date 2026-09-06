@@ -1,0 +1,19 @@
+# TESTING_STRATEGY.md §3 flow 3: hit free-tier limit → paywall appears →
+# (sandbox) purchase → limit removed.
+#
+# The purchase step is intentionally NOT automated here: it requires a
+# RevenueCat sandbox account signed in on the test device/emulator, which is
+# per-developer environment setup, not something a checked-in flow can carry.
+# Once signed into a sandbox tester account, resume manually from where this
+# flow stops: complete the sandbox purchase, then re-run "Create account" and
+# assert it now succeeds instead of paywalling.
+appId: com.spendtr.app
+---
+- runFlow: subflows/onboarding.yaml
+- tapOn: "Account"
+- assertVisible: "New account"
+- tapOn:
+    id: "account-name-input"
+- inputText: "Savings"
+- tapOn: "Create account"
+- assertVisible: "Spendtr Pro"
